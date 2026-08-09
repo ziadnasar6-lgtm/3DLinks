@@ -1,0 +1,1352 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <title>Nassar Gate | 3D Scroll Personal Hub</title>
+    <meta
+      name="description"
+      content="Nassar Gate & Nassar 3D Gate - Pure 3D Large Text & Icon Native Scroll Hub"
+    />
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- External Libraries via CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/FontLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/geometries/TextGeometry.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+
+    <style>
+      :root {
+        --bg-dark: #03050d;
+        --accent-cyan: #00f2fe;
+        --accent-purple: #9d4edd;
+        --accent-pink: #ff2a85;
+        --glass-bg: rgba(8, 12, 26, 0.75);
+        --glass-border: rgba(255, 255, 255, 0.16);
+        --text-main: #ffffff;
+        --text-muted: #94a3b8;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        user-select: none;
+        -webkit-user-select: none;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      html {
+        scroll-behavior: smooth;
+        background-color: var(--bg-dark);
+      }
+
+      body {
+        width: 100%;
+        min-height: 100vh;
+        overflow-x: hidden;
+        overflow-y: auto;
+        background-color: var(--bg-dark);
+        font-family: "Plus Jakarta Sans", sans-serif;
+        color: var(--text-main);
+      }
+
+      /* Native Scroll Dummy Space */
+      .scroll-space {
+        height: 520vh;
+        position: relative;
+        pointer-events: none;
+        display: block;
+      }
+
+      /* Fixed WebGL Background Canvas */
+      #webgl-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 1;
+        pointer-events: auto;
+      }
+
+      /* Fixed Header Profile Card */
+      header.profile-card {
+        position: fixed;
+        top: 1.2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        pointer-events: auto;
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.9rem;
+        background: var(--glass-bg);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid var(--glass-border);
+        border-radius: 40px;
+        padding: 0.55rem 1.3rem;
+        box-shadow:
+          0 15px 35px rgba(0, 0, 0, 0.6),
+          inset 0 1px 1px rgba(255, 255, 255, 0.25);
+        max-width: 440px;
+        width: 90%;
+      }
+
+      .avatar-wrapper {
+        position: relative;
+        width: 44px;
+        height: 44px;
+        flex-shrink: 0;
+      }
+
+      .avatar-img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: linear-gradient(
+          135deg,
+          var(--accent-cyan),
+          var(--accent-purple)
+        );
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: "Outfit", sans-serif;
+        font-size: 1.25rem;
+        font-weight: 900;
+        color: #fff;
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.45);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .status-badge {
+        position: absolute;
+        bottom: 0px;
+        right: 0px;
+        width: 11px;
+        height: 11px;
+        background-color: #10b981;
+        border: 2px solid #080c1a;
+        border-radius: 50%;
+        box-shadow: 0 0 8px #10b981;
+      }
+
+      .profile-info {
+        display: flex;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .profile-info h1 {
+        font-family: "Outfit", sans-serif;
+        font-size: 1.1rem;
+        font-weight: 800;
+        letter-spacing: -0.3px;
+        background: linear-gradient(135deg, #ffffff 30%, var(--accent-cyan));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        line-height: 1.1;
+      }
+
+      .profile-info p.bio {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        font-weight: 500;
+      }
+
+      /* Fixed Top Right Audio Control */
+      .controls-panel {
+        position: fixed;
+        top: 1.2rem;
+        right: 1.2rem;
+        display: flex;
+        gap: 0.5rem;
+        z-index: 30;
+        pointer-events: auto;
+      }
+
+      .control-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        color: var(--text-main);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+      }
+
+      .control-btn:active,
+      .control-btn:hover {
+        background: rgba(255, 255, 255, 0.2);
+        border-color: var(--accent-cyan);
+        transform: scale(1.1);
+        box-shadow: 0 0 20px rgba(0, 242, 254, 0.4);
+      }
+
+      .control-btn svg {
+        width: 18px;
+        height: 18px;
+        fill: currentColor;
+      }
+
+      /* GLOWING SCROLL NAVIGATION ARROW BUTTONS */
+      .scroll-nav-buttons {
+        position: fixed;
+        bottom: 2rem;
+        right: 1.6rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.6rem;
+        z-index: 35;
+        pointer-events: auto;
+      }
+
+      .nav-arrow-btn {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(8, 14, 30, 0.88);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1.5px solid var(--accent-cyan);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        box-shadow: 0 0 22px rgba(0, 242, 254, 0.45);
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        animation: pulseGlow 2.5s infinite alternate;
+      }
+
+      @keyframes pulseGlow {
+        0% {
+          box-shadow: 0 0 15px rgba(0, 242, 254, 0.35);
+          border-color: var(--accent-cyan);
+        }
+        100% {
+          box-shadow: 0 0 32px rgba(0, 242, 254, 0.85);
+          border-color: #ffffff;
+        }
+      }
+
+      .nav-arrow-btn:active,
+      .nav-arrow-btn:hover {
+        background: var(--accent-cyan);
+        color: #03050d;
+        transform: scale(1.16);
+        box-shadow: 0 0 38px var(--accent-cyan);
+      }
+
+      .nav-arrow-btn svg {
+        width: 26px;
+        height: 26px;
+        fill: currentColor;
+      }
+
+      /* Scroll Indicator Dots Bar (Left Side) */
+      .scroll-indicator-bar {
+        position: fixed;
+        left: 1.2rem;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        flex-direction: column;
+        gap: 0.85rem;
+        z-index: 25;
+        pointer-events: auto;
+      }
+
+      .scroll-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        cursor: pointer;
+        transition: all 0.3s ease;
+      }
+
+      .scroll-dot.active {
+        background: var(--accent-cyan);
+        box-shadow: 0 0 12px var(--accent-cyan);
+        transform: scale(1.4);
+        border-color: #ffffff;
+      }
+
+      /* Fixed Bottom Hint Bar */
+      footer.hint-bar {
+        position: fixed;
+        bottom: 1.2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 20;
+        pointer-events: auto;
+        background: var(--glass-bg);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1px solid var(--glass-border);
+        padding: 0.48rem 1.2rem;
+        border-radius: 30px;
+        font-size: 0.74rem;
+        color: var(--text-muted);
+        letter-spacing: 0.4px;
+        display: flex;
+        align-items: center;
+        gap: 0.55rem;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+      }
+
+      footer.hint-bar span.dot {
+        width: 7px;
+        height: 7px;
+        background-color: var(--accent-cyan);
+        border-radius: 50%;
+        box-shadow: 0 0 8px var(--accent-cyan);
+      }
+
+      /* Glowing HTML Tooltip */
+      #tooltip {
+        position: fixed;
+        top: 0;
+        left: 0;
+        transform: translate(-50%, -130%);
+        background: rgba(4, 8, 20, 0.94);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border: 1.5px solid var(--accent-cyan);
+        box-shadow:
+          0 0 25px rgba(0, 242, 254, 0.5),
+          inset 0 0 12px rgba(0, 242, 254, 0.3);
+        padding: 0.45rem 1.1rem;
+        border-radius: 14px;
+        pointer-events: none;
+        opacity: 0;
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        z-index: 100;
+        white-space: nowrap;
+      }
+
+      #tooltip.visible {
+        opacity: 1;
+      }
+
+      #tooltip .tooltip-title {
+        font-family: "Outfit", sans-serif;
+        font-weight: 800;
+        font-size: 0.95rem;
+        color: #ffffff;
+        letter-spacing: 0.4px;
+      }
+
+      #tooltip .tooltip-sub {
+        font-size: 0.7rem;
+        color: var(--accent-cyan);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-top: 1px;
+      }
+
+      /* Mobile Adjustments */
+      @media (max-width: 768px) {
+        header.profile-card {
+          top: 0.6rem;
+          padding: 0.4rem 0.85rem;
+          width: 88%;
+        }
+        .controls-panel {
+          top: 0.6rem;
+          right: 0.6rem;
+        }
+        .scroll-nav-buttons {
+          bottom: 1.2rem;
+          right: 0.8rem;
+          gap: 0.45rem;
+        }
+        .nav-arrow-btn {
+          width: 44px;
+          height: 44px;
+        }
+        .nav-arrow-btn svg {
+          width: 22px;
+          height: 22px;
+        }
+        .scroll-indicator-bar {
+          left: 0.6rem;
+        }
+        footer.hint-bar {
+          bottom: 0.65rem;
+          font-size: 0.64rem;
+          padding: 0.35rem 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Fixed WebGL Background Canvas -->
+    <div id="webgl-container"></div>
+
+    <!-- Native Scroll Dummy Space -->
+    <div class="scroll-space" id="scroll-space"></div>
+
+    <!-- Dynamic Floating Tooltip -->
+    <div id="tooltip">
+      <div class="tooltip-title" id="tt-title">Nassar Gate</div>
+      <div class="tooltip-sub" id="tt-sub">Tap to open</div>
+    </div>
+
+    <!-- Fixed Profile Header -->
+    <header class="profile-card">
+      <div class="avatar-wrapper">
+        <div class="avatar-img">NG</div>
+        <div class="status-badge" title="Online"></div>
+      </div>
+      <div class="profile-info">
+        <h1>Nassar Gate</h1>
+        <p class="bio">Centered 3D Hub • Scroll & Spin</p>
+      </div>
+    </header>
+
+    <!-- Left Side Scroll Navigation Dots -->
+    <div class="scroll-indicator-bar" id="dots-bar">
+      <div class="scroll-dot active" data-index="0" title="FACEBOOK"></div>
+      <div class="scroll-dot" data-index="1" title="WHATSAPP"></div>
+      <div class="scroll-dot" data-index="2" title="YOUTUBE"></div>
+      <div class="scroll-dot" data-index="3" title="GITHUB"></div>
+      <div class="scroll-dot" data-index="4" title="NASSAR 3D GATE"></div>
+      <div class="scroll-dot" data-index="5" title="NASSAR GATE"></div>
+    </div>
+
+    <!-- GLOWING SCROLL NAVIGATION ARROW BUTTONS -->
+    <div class="scroll-nav-buttons">
+      <button
+        class="nav-arrow-btn"
+        id="btn-scroll-up"
+        title="Previous Item (Up)"
+      >
+        <svg viewBox="0 0 24 24">
+          <path d="M7.41 15.41L12 10.83l4.59 4.58L18 14l-6-6-6 6z" />
+        </svg>
+      </button>
+      <button
+        class="nav-arrow-btn"
+        id="btn-scroll-down"
+        title="Next Item (Down)"
+      >
+        <svg viewBox="0 0 24 24">
+          <path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z" />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Top Right Controls -->
+    <div class="controls-panel">
+      <button class="control-btn" id="btn-audio" title="Toggle Sound">
+        <svg id="icon-sound-on" viewBox="0 0 24 24">
+          <path
+            d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"
+          />
+        </svg>
+        <svg id="icon-sound-off" viewBox="0 0 24 24" style="display: none">
+          <path
+            d="M16.5 12c0-1.77-1.02-3.29-2.5-4.03v2.21l2.45 2.45c.03-.2.05-.41.05-.63zm2.5 0c0 .94-.2 1.82-.54 2.64l1.51 1.51C20.63 14.91 21 13.5 21 12c0-4.28-2.99-7.86-7-8.77v2.06c2.89.86 5 3.54 5 6.71zM4.27 3L3 4.27 7.73 9H3v6h4l5 5v-6.73l4.25 4.25c-.67.52-1.42.93-2.25 1.18v2.06c1.38-.31 2.63-.95 3.69-1.81L19.73 21 21 19.73l-9-9L4.27 3zM12 4L9.91 6.09 12 8.18V4z"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Bottom Hint Bar -->
+    <footer class="hint-bar">
+      <span class="dot"></span>
+      <span>Drag to Spin • Scroll or Arrows to Navigate</span>
+    </footer>
+
+    <!-- MAIN SCRIPT -->
+    <script>
+      /* ========================================================================
+       1. SOCIAL & PORTFOLIO LINKS CONFIGURATION
+       ======================================================================== */
+      const LINKS = {
+        facebook: "https://www.facebook.com/share/1G12sRQvYW/",
+        whatsapp: "https://wa.me/01036083680",
+        youtube: "https://www.youtube.com/@ziadnasar-xn5fz",
+        github: "https://github.com/ziadnasar6-lgtm",
+        portfolio3D: "https://ziadnasar6-lgtm.github.io/Portofolio_Forest/", // Nassar 3D Gate
+        portfolio2D: "https://share.google/WPF7lsDoPzj4z6YCi", // Nassar Gate
+      };
+
+      const ITEMS_DATA = [
+        {
+          id: "facebook",
+          text: "FACEBOOK",
+          sub: "Social Connect",
+          color: "#1877F2",
+          iconType: "facebook",
+        },
+        {
+          id: "whatsapp",
+          text: "WHATSAPP",
+          sub: "Instant Chat",
+          color: "#25D366",
+          iconType: "whatsapp",
+        },
+        {
+          id: "youtube",
+          text: "YOUTUBE",
+          sub: "Video Channel",
+          color: "#FF0000",
+          iconType: "youtube",
+        },
+        {
+          id: "github",
+          text: "GITHUB",
+          sub: "Code Repos",
+          color: "#00F2FE",
+          iconType: "github",
+        },
+        {
+          id: "portfolio3D",
+          text: "NASSAR 3D GATE",
+          sub: "3D Interactive World",
+          color: "#9D4EDD",
+          iconType: "gate3d",
+        },
+        {
+          id: "portfolio2D",
+          text: "NASSAR GATE",
+          sub: "Official Web Gate",
+          color: "#FF2A85",
+          iconType: "gate2d",
+        },
+      ];
+
+      /* ========================================================================
+       2. PROCEDURAL WEB AUDIO SYNTHESIZER
+       ======================================================================== */
+      class AudioSynthesizer {
+        constructor() {
+          this.ctx = null;
+          this.enabled = true;
+        }
+
+        init() {
+          if (!this.ctx) {
+            const AudioContext =
+              window.AudioContext || window.webkitAudioContext;
+            if (AudioContext) {
+              this.ctx = new AudioContext();
+            }
+          }
+          if (this.ctx && this.ctx.state === "suspended") {
+            this.ctx.resume();
+          }
+        }
+
+        playHover() {
+          if (!this.enabled) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(1300, now);
+          osc.frequency.exponentialRampToValueAtTime(2800, now + 0.12);
+
+          gain.gain.setValueAtTime(0.001, now);
+          gain.gain.linearRampToValueAtTime(0.12, now + 0.02);
+          gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.16);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.18);
+        }
+
+        playClick() {
+          if (!this.enabled) return;
+          this.init();
+          if (!this.ctx) return;
+
+          const now = this.ctx.currentTime;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(850, now);
+          osc.frequency.exponentialRampToValueAtTime(180, now + 0.15);
+
+          gain.gain.setValueAtTime(0.35, now);
+          gain.gain.exponentialRampToValueAtTime(0.001, now + 0.2);
+
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+
+          osc.start(now);
+          osc.stop(now + 0.22);
+        }
+      }
+
+      const audioSynth = new AudioSynthesizer();
+      window.addEventListener("touchstart", () => audioSynth.init(), {
+        once: true,
+      });
+      window.addEventListener("pointerdown", () => audioSynth.init(), {
+        once: true,
+      });
+
+      const btnAudio = document.getElementById("btn-audio");
+      const iconSoundOn = document.getElementById("icon-sound-on");
+      const iconSoundOff = document.getElementById("icon-sound-off");
+
+      btnAudio.addEventListener("click", (e) => {
+        e.stopPropagation();
+        audioSynth.enabled = !audioSynth.enabled;
+        if (audioSynth.enabled) {
+          audioSynth.init();
+          audioSynth.playHover();
+          iconSoundOn.style.display = "block";
+          iconSoundOff.style.display = "none";
+        } else {
+          iconSoundOn.style.display = "none";
+          iconSoundOff.style.display = "block";
+        }
+      });
+
+      /* ========================================================================
+       3. THREE.JS SCENE SETUP
+       ======================================================================== */
+      const container = document.getElementById("webgl-container");
+      const scene = new THREE.Scene();
+      scene.fog = new THREE.FogExp2(0x03050d, 0.028);
+
+      function isMobile() {
+        return window.innerWidth < 768;
+      }
+
+      function getSpacingY() {
+        return isMobile() ? 4.2 : 4.6;
+      }
+
+      const camera = new THREE.PerspectiveCamera(
+        isMobile() ? 52 : 45,
+        window.innerWidth / window.innerHeight,
+        0.1,
+        100,
+      );
+      // Fixed Camera X = 0 for perfect horizontal centering
+      camera.position.set(0, 0, isMobile() ? 9.5 : 8.2);
+
+      const renderer = new THREE.WebGLRenderer({
+        antialias: true,
+        alpha: true,
+        powerPreference: "high-performance",
+      });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      renderer.toneMapping = THREE.ACESFilmicToneMapping;
+      renderer.toneMappingExposure = 1.25;
+      container.appendChild(renderer.domElement);
+
+      /* Lights */
+      const ambientLight = new THREE.AmbientLight(0x8a99cc, 1.5);
+      scene.add(ambientLight);
+
+      const pointLightCyan = new THREE.PointLight(0x00f2fe, 4, 25);
+      pointLightCyan.position.set(-5, 5, 5);
+      scene.add(pointLightCyan);
+
+      const pointLightPurple = new THREE.PointLight(0x9d4edd, 4, 25);
+      pointLightPurple.position.set(5, -5, 5);
+      scene.add(pointLightPurple);
+
+      /* Cosmic Starfield Background */
+      const particleCount = 1800;
+      const particleGeo = new THREE.BufferGeometry();
+      const particlePositions = new Float32Array(particleCount * 3);
+
+      for (let i = 0; i < particleCount * 3; i += 3) {
+        particlePositions[i] = (Math.random() - 0.5) * 50;
+        particlePositions[i + 1] = (Math.random() - 0.5) * 60;
+        particlePositions[i + 2] = (Math.random() - 0.5) * 30 - 4;
+      }
+
+      particleGeo.setAttribute(
+        "position",
+        new THREE.BufferAttribute(particlePositions, 3),
+      );
+      const particleMat = new THREE.PointsMaterial({
+        color: 0x80c2ff,
+        size: isMobile() ? 0.08 : 0.06,
+        transparent: true,
+        opacity: 0.7,
+        blending: THREE.AdditiveBlending,
+      });
+      const starField = new THREE.Points(particleGeo, particleMat);
+      scene.add(starField);
+
+      /* ========================================================================
+       4. CENTERED 3D EMBLEMS & 3D TEXT GEOMETRIES
+       ======================================================================== */
+      const itemsGroup = new THREE.Group();
+      scene.add(itemsGroup);
+      const itemMeshes = [];
+
+      function create3DIconMesh(iconType, colorHex) {
+        const group = new THREE.Group();
+        const color = new THREE.Color(colorHex);
+
+        const matMain = new THREE.MeshStandardMaterial({
+          color: color,
+          metalness: 0.45,
+          roughness: 0.12,
+          emissive: color,
+          emissiveIntensity: 0.35,
+        });
+
+        const matWhite = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          metalness: 0.2,
+          roughness: 0.1,
+          emissive: 0xffffff,
+          emissiveIntensity: 0.15,
+        });
+
+        switch (iconType) {
+          case "facebook": {
+            const shape = new THREE.Shape();
+            shape.moveTo(-0.25, -0.6);
+            shape.lineTo(0.1, -0.6);
+            shape.lineTo(0.1, -0.08);
+            shape.lineTo(0.35, -0.08);
+            shape.lineTo(0.28, 0.18);
+            shape.lineTo(0.1, 0.18);
+            shape.lineTo(0.1, 0.32);
+            shape.quadraticCurveTo(0.1, 0.52, 0.32, 0.52);
+            shape.lineTo(0.4, 0.52);
+            shape.lineTo(0.4, 0.72);
+            shape.quadraticCurveTo(0.15, 0.72, -0.12, 0.62);
+            shape.quadraticCurveTo(-0.28, 0.48, -0.28, 0.28);
+            shape.lineTo(-0.28, 0.18);
+            shape.lineTo(-0.42, 0.18);
+            shape.lineTo(-0.42, -0.08);
+            shape.lineTo(-0.28, -0.08);
+            shape.closePath();
+
+            const geo = new THREE.ExtrudeGeometry(shape, {
+              depth: 0.22,
+              bevelEnabled: true,
+              bevelSegments: 4,
+              steps: 1,
+              bevelSize: 0.04,
+              bevelThickness: 0.04,
+            });
+            geo.center();
+            group.add(new THREE.Mesh(geo, matMain));
+            break;
+          }
+          case "whatsapp": {
+            const ringGeo = new THREE.TorusGeometry(0.58, 0.14, 24, 48);
+            group.add(new THREE.Mesh(ringGeo, matMain));
+
+            const tailShape = new THREE.Shape();
+            tailShape.moveTo(-0.3, -0.3);
+            tailShape.lineTo(-0.7, -0.7);
+            tailShape.lineTo(-0.55, -0.15);
+            tailShape.closePath();
+            const tailGeo = new THREE.ExtrudeGeometry(tailShape, {
+              depth: 0.15,
+              bevelEnabled: true,
+              bevelSize: 0.03,
+              bevelThickness: 0.03,
+            });
+            tailGeo.center();
+            const tailMesh = new THREE.Mesh(tailGeo, matMain);
+            tailMesh.position.set(-0.32, -0.32, 0);
+            group.add(tailMesh);
+            break;
+          }
+          case "youtube": {
+            const shape = new THREE.Shape();
+            const w = 1.25,
+              h = 0.85,
+              r = 0.22;
+            const x = -w / 2,
+              y = -h / 2;
+            shape.moveTo(x, y + r);
+            shape.lineTo(x, y + h - r);
+            shape.quadraticCurveTo(x, y + h, x + r, y + h);
+            shape.lineTo(x + w - r, y + h);
+            shape.quadraticCurveTo(x + w, y + h, x + w, y + h - r);
+            shape.lineTo(x + w, y + r);
+            shape.quadraticCurveTo(x + w, y, x + w - r, y);
+            shape.lineTo(x + r, y);
+            shape.quadraticCurveTo(x, y, x, y + r);
+
+            const geo = new THREE.ExtrudeGeometry(shape, {
+              depth: 0.18,
+              bevelEnabled: true,
+              bevelSize: 0.04,
+              bevelThickness: 0.04,
+            });
+            geo.center();
+            group.add(new THREE.Mesh(geo, matMain));
+
+            const triShape = new THREE.Shape();
+            triShape.moveTo(-0.18, -0.25);
+            triShape.lineTo(0.28, 0);
+            triShape.lineTo(-0.18, 0.25);
+            triShape.closePath();
+            const triGeo = new THREE.ExtrudeGeometry(triShape, {
+              depth: 0.08,
+              bevelEnabled: true,
+              bevelSize: 0.02,
+              bevelThickness: 0.02,
+            });
+            triGeo.center();
+            const triMesh = new THREE.Mesh(triGeo, matWhite);
+            triMesh.position.z = 0.12;
+            group.add(triMesh);
+            break;
+          }
+          case "github": {
+            const sphereGeo = new THREE.SphereGeometry(0.58, 32, 32);
+            group.add(new THREE.Mesh(sphereGeo, matMain));
+
+            const ringGeo = new THREE.TorusGeometry(0.68, 0.045, 16, 32);
+            group.add(new THREE.Mesh(ringGeo, matWhite));
+            break;
+          }
+          case "gate3d": {
+            const knotGeo = new THREE.TorusKnotGeometry(0.48, 0.12, 64, 16);
+            group.add(new THREE.Mesh(knotGeo, matMain));
+            break;
+          }
+          case "gate2d": {
+            const archShape = new THREE.Shape();
+            archShape.absarc(0, 0, 0.65, 0, Math.PI, false);
+            archShape.lineTo(-0.65, -0.6);
+            archShape.lineTo(0.65, -0.6);
+            archShape.closePath();
+
+            const holePath = new THREE.Path();
+            holePath.absarc(0, 0, 0.42, 0, Math.PI, false);
+            holePath.lineTo(-0.42, -0.6);
+            holePath.lineTo(0.42, -0.6);
+            holePath.closePath();
+            archShape.holes.push(holePath);
+
+            const archGeo = new THREE.ExtrudeGeometry(archShape, {
+              depth: 0.18,
+              bevelEnabled: true,
+              bevelSize: 0.03,
+              bevelThickness: 0.03,
+            });
+            archGeo.center();
+            group.add(new THREE.Mesh(archGeo, matMain));
+            break;
+          }
+        }
+
+        return group;
+      }
+
+      function create3DTextGeometry(textString, colorHex, font) {
+        const color = new THREE.Color(colorHex);
+
+        if (font) {
+          // Proportional text sizing based on string length so it never clips
+          const baseSize = isMobile() ? 0.32 : 0.42;
+          const charScale = textString.length > 10 ? 0.78 : 1.0;
+
+          const textGeo = new THREE.TextGeometry(textString, {
+            font: font,
+            size: baseSize * charScale,
+            height: 0.08,
+            curveSegments: 10,
+            bevelEnabled: true,
+            bevelThickness: 0.018,
+            bevelSize: 0.012,
+            bevelOffset: 0,
+            bevelSegments: 4,
+          });
+          textGeo.center();
+
+          const mat = new THREE.MeshStandardMaterial({
+            color: 0xffffff,
+            metalness: 0.25,
+            roughness: 0.1,
+            emissive: color,
+            emissiveIntensity: 0.5,
+          });
+
+          return new THREE.Mesh(textGeo, mat);
+        } else {
+          const canvas = document.createElement("canvas");
+          canvas.width = 1024;
+          canvas.height = 256;
+          const ctx = canvas.getContext("2d");
+
+          ctx.font = '900 78px "Outfit", sans-serif';
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+
+          ctx.shadowColor = colorHex;
+          ctx.shadowBlur = 35;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(textString, 512, 128);
+
+          const texture = new THREE.CanvasTexture(canvas);
+          texture.needsUpdate = true;
+
+          const planeGeo = new THREE.PlaneGeometry(
+            isMobile() ? 3.0 : 3.8,
+            0.95,
+          );
+          const planeMat = new THREE.MeshStandardMaterial({
+            map: texture,
+            transparent: true,
+            roughness: 0.1,
+            metalness: 0.1,
+            emissive: color,
+            emissiveIntensity: 0.45,
+          });
+
+          return new THREE.Mesh(planeGeo, planeMat);
+        }
+      }
+
+      const fontLoader = new THREE.FontLoader();
+      let loadedFont = null;
+
+      function build3DScene(font) {
+        while (itemsGroup.children.length > 0) {
+          itemsGroup.remove(itemsGroup.children[0]);
+        }
+        itemMeshes.length = 0;
+
+        const spacingY = getSpacingY();
+
+        ITEMS_DATA.forEach((data, index) => {
+          const itemGroup = new THREE.Group();
+
+          // 1. 3D Icon Emblem
+          const icon3D = create3DIconMesh(data.iconType, data.color);
+          icon3D.position.set(0, 0.7, 0);
+          itemGroup.add(icon3D);
+
+          // 2. 3D Text
+          const text3D = create3DTextGeometry(data.text, data.color, font);
+          text3D.position.set(0, -0.6, 0);
+          itemGroup.add(text3D);
+
+          // 3. Ambient Ring Halo
+          const haloGeo = new THREE.TorusGeometry(1.25, 0.02, 16, 64);
+          const haloMat = new THREE.MeshBasicMaterial({
+            color: new THREE.Color(data.color),
+            transparent: true,
+            opacity: 0.4,
+          });
+          const haloMesh = new THREE.Mesh(haloGeo, haloMat);
+          haloMesh.rotation.x = Math.PI / 2;
+          itemGroup.add(haloMesh);
+
+          // Positioned dead center (X = 0) along Y axis
+          const targetY = -index * spacingY;
+          itemGroup.userData = {
+            id: data.id,
+            title: data.text,
+            sub: data.sub,
+            color: data.color,
+            icon3D: icon3D,
+            text3D: text3D,
+            haloMesh: haloMesh,
+            targetY: targetY,
+            floatOffset: Math.random() * Math.PI * 2,
+          };
+
+          itemGroup.position.set(0, targetY, 0);
+
+          itemsGroup.add(itemGroup);
+          itemMeshes.push(itemGroup);
+        });
+      }
+
+      fontLoader.load(
+        "https://cdn.jsdelivr.net/npm/three@0.128.0/examples/fonts/helvetiker_bold.typeface.json",
+        (font) => {
+          loadedFont = font;
+          build3DScene(font);
+        },
+        undefined,
+        () => {
+          build3DScene(null);
+        },
+      );
+
+      build3DScene(null);
+
+      /* ========================================================================
+       5. DRAG TO SPIN AROUND ITSELF & ANIMATED SCROLL CONTROLLER
+       ======================================================================== */
+      let isDragging = false;
+      let previousPointerX = 0;
+
+      window.addEventListener("pointerdown", (e) => {
+        if (
+          e.target.closest(".interactive") ||
+          e.target.closest("header") ||
+          e.target.closest(".scroll-indicator-bar") ||
+          e.target.closest(".scroll-nav-buttons")
+        )
+          return;
+        isDragging = true;
+        previousPointerX = e.clientX;
+      });
+
+      window.addEventListener("pointermove", (e) => {
+        if (isDragging && hoveredItem) {
+          const deltaX = e.clientX - previousPointerX;
+          // ROTATES THE 3D ITEM AROUND ITS OWN Y-AXIS IN PLACE!
+          hoveredItem.rotation.y += deltaX * 0.018;
+          previousPointerX = e.clientX;
+        }
+      });
+
+      window.addEventListener("pointerup", () => {
+        isDragging = false;
+      });
+
+      const dots = document.querySelectorAll(".scroll-dot");
+      const btnScrollDown = document.getElementById("btn-scroll-down");
+      const btnScrollUp = document.getElementById("btn-scroll-up");
+
+      function getMaxScroll() {
+        return Math.max(
+          0,
+          document.documentElement.scrollHeight - window.innerHeight,
+        );
+      }
+
+      function getCurrentItemIndex() {
+        const maxScroll = getMaxScroll();
+        if (maxScroll <= 0) return 0;
+        const scrollFraction = window.scrollY / maxScroll;
+        return Math.round(scrollFraction * (ITEMS_DATA.length - 1));
+      }
+
+      function animateScrollTo(targetTop) {
+        audioSynth.playClick();
+        const maxScroll = getMaxScroll();
+        const clampedTarget = Math.max(0, Math.min(maxScroll, targetTop));
+
+        const scrollObj = { y: window.scrollY };
+        gsap.to(scrollObj, {
+          y: clampedTarget,
+          duration: 0.75,
+          ease: "power2.out",
+          onUpdate: () => {
+            window.scrollTo(0, scrollObj.y);
+          },
+        });
+      }
+
+      function scrollToItemIndex(targetIndex) {
+        const maxScroll = getMaxScroll();
+        const targetTop = (targetIndex / (ITEMS_DATA.length - 1)) * maxScroll;
+        animateScrollTo(targetTop);
+      }
+
+      btnScrollDown.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentIndex = getCurrentItemIndex();
+        const nextIndex = (currentIndex + 1) % ITEMS_DATA.length;
+        scrollToItemIndex(nextIndex);
+      });
+
+      btnScrollUp.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const currentIndex = getCurrentItemIndex();
+        const prevIndex =
+          (currentIndex - 1 + ITEMS_DATA.length) % ITEMS_DATA.length;
+        scrollToItemIndex(prevIndex);
+      });
+
+      dots.forEach((dot) => {
+        dot.addEventListener("click", (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const index = parseInt(dot.getAttribute("data-index"));
+          scrollToItemIndex(index);
+        });
+      });
+
+      function updateActiveScrollDot(activeIndex) {
+        dots.forEach((dot, idx) => {
+          if (idx === activeIndex) {
+            dot.classList.add("active");
+          } else {
+            dot.classList.remove("active");
+          }
+        });
+      }
+
+      /* ========================================================================
+       6. RAYCASTING & INTERACTION HANDLERS
+       ======================================================================== */
+      const raycaster = new THREE.Raycaster();
+      const mouse = new THREE.Vector2(-100, -100);
+      let hoveredItem = null;
+
+      const tooltip = document.getElementById("tooltip");
+      const ttTitle = document.getElementById("tt-title");
+      const ttSub = document.getElementById("tt-sub");
+
+      function updatePointerPos(clientX, clientY) {
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+        if (hoveredItem) {
+          tooltip.style.left = `${clientX}px`;
+          tooltip.style.top = `${clientY}px`;
+        }
+      }
+
+      window.addEventListener("mousemove", (e) =>
+        updatePointerPos(e.clientX, e.clientY),
+      );
+      window.addEventListener(
+        "touchmove",
+        (e) => {
+          if (e.touches.length > 0)
+            updatePointerPos(e.touches[0].clientX, e.touches[0].clientY);
+        },
+        { passive: true },
+      );
+
+      function checkRaycastHover() {
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+          itemsGroup.children,
+          true,
+        );
+
+        if (intersects.length > 0) {
+          let topGroup = intersects[0].object;
+          while (topGroup.parent && topGroup.parent !== itemsGroup) {
+            topGroup = topGroup.parent;
+          }
+
+          if (hoveredItem !== topGroup) {
+            if (hoveredItem) unhoverItem(hoveredItem);
+            hoveredItem = topGroup;
+            hoverItem(hoveredItem);
+          }
+        } else {
+          if (hoveredItem) {
+            unhoverItem(hoveredItem);
+            hoveredItem = null;
+          }
+        }
+      }
+
+      function hoverItem(item) {
+        document.body.style.cursor = "pointer";
+        audioSynth.playHover();
+
+        gsap.to(item.scale, {
+          x: 1.22,
+          y: 1.22,
+          z: 1.22,
+          duration: 0.35,
+          ease: "back.out(2)",
+        });
+        gsap.to(item.userData.icon3D.rotation, {
+          y: item.userData.icon3D.rotation.y + Math.PI * 2,
+          duration: 0.8,
+          ease: "power2.out",
+        });
+        gsap.to(item.userData.haloMesh.material, {
+          opacity: 0.95,
+          duration: 0.3,
+        });
+
+        ttTitle.textContent = item.userData.title;
+        ttSub.textContent = item.userData.sub;
+        tooltip.style.borderColor = item.userData.color;
+        tooltip.style.boxShadow = `0 0 25px ${item.userData.color}77, inset 0 0 12px ${item.userData.color}33`;
+        tooltip.classList.add("visible");
+      }
+
+      function unhoverItem(item) {
+        document.body.style.cursor = "default";
+
+        gsap.to(item.scale, {
+          x: 1,
+          y: 1,
+          z: 1,
+          duration: 0.35,
+          ease: "power2.out",
+        });
+        gsap.to(item.userData.haloMesh.material, {
+          opacity: 0.4,
+          duration: 0.3,
+        });
+
+        tooltip.classList.remove("visible");
+      }
+
+      function handleActivation(clientX, clientY) {
+        audioSynth.init();
+        mouse.x = (clientX / window.innerWidth) * 2 - 1;
+        mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+        raycaster.setFromCamera(mouse, camera);
+        const intersects = raycaster.intersectObjects(
+          itemsGroup.children,
+          true,
+        );
+
+        if (intersects.length > 0) {
+          let topGroup = intersects[0].object;
+          while (topGroup.parent && topGroup.parent !== itemsGroup) {
+            topGroup = topGroup.parent;
+          }
+
+          const cardId = topGroup.userData.id;
+          const targetUrl = LINKS[cardId];
+
+          audioSynth.playClick();
+
+          const tl = gsap.timeline();
+          tl.to(topGroup.scale, { x: 0.85, y: 0.85, z: 0.85, duration: 0.1 })
+            .to(topGroup.scale, {
+              x: 1.35,
+              y: 1.35,
+              z: 1.35,
+              duration: 0.22,
+              ease: "back.out(3)",
+            })
+            .to(topGroup.rotation, {
+              y: topGroup.rotation.y + Math.PI * 2,
+              duration: 0.45,
+              ease: "power2.out",
+            })
+            .to(topGroup.scale, { x: 1.22, y: 1.22, z: 1.22, duration: 0.18 });
+
+          if (
+            targetUrl &&
+            targetUrl !== "YOUR_" + cardId.toUpperCase() + "_URL"
+          ) {
+            setTimeout(() => {
+              window.open(targetUrl, "_blank", "noopener,noreferrer");
+            }, 220);
+          }
+        }
+      }
+
+      window.addEventListener("click", (e) => {
+        if (
+          e.target.closest(".interactive") ||
+          e.target.closest("header") ||
+          e.target.closest(".scroll-indicator-bar") ||
+          e.target.closest(".scroll-nav-buttons")
+        )
+          return;
+        handleActivation(e.clientX, e.clientY);
+      });
+
+      /* ========================================================================
+       7. RESPONSIVE RESIZE
+       ======================================================================== */
+      window.addEventListener("resize", () => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.fov = isMobile() ? 52 : 45;
+        camera.position.x = 0;
+        camera.position.z = isMobile() ? 9.5 : 8.2;
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+        build3DScene(loadedFont);
+      });
+
+      /* ========================================================================
+       8. ANIMATION RENDER LOOP & SCROLL TRACKING
+       ======================================================================== */
+      let clock = new THREE.Clock();
+
+      function animate() {
+        requestAnimationFrame(animate);
+        const elapsedTime = clock.getElapsedTime();
+
+        // Ensure Camera X stays strictly 0 (Perfect Horizontal Centering)
+        camera.position.x = 0;
+
+        // Native Page Scroll Y Position
+        const maxScroll = getMaxScroll();
+        const scrollFraction = maxScroll > 0 ? window.scrollY / maxScroll : 0;
+
+        const totalSpanY = (ITEMS_DATA.length - 1) * getSpacingY();
+        const targetCamY = -scrollFraction * totalSpanY;
+        camera.position.y += (targetCamY - camera.position.y) * 0.08;
+
+        const activeIndex = Math.min(
+          ITEMS_DATA.length - 1,
+          Math.max(0, Math.round(scrollFraction * (ITEMS_DATA.length - 1))),
+        );
+        updateActiveScrollDot(activeIndex);
+
+        // Continuous Gentle Self-Spin & Floating Oscillation for 3D Items
+        itemMeshes.forEach((item) => {
+          if (item !== hoveredItem && !isDragging) {
+            const offset = item.userData.floatOffset;
+            item.position.y =
+              item.userData.targetY +
+              Math.sin(elapsedTime * 1.6 + offset) * 0.08;
+            item.userData.icon3D.rotation.y += 0.008; // Continuous spin around itself!
+            item.userData.haloMesh.rotation.z = elapsedTime * 0.5;
+          }
+        });
+
+        // Cosmic Starfield Background Rotation
+        starField.rotation.y = elapsedTime * 0.018;
+        starField.rotation.x = elapsedTime * 0.01;
+
+        checkRaycastHover();
+        renderer.render(scene, camera);
+      }
+
+      animate();
+    </script>
+  </body>
+</html>
